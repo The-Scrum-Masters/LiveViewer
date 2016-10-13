@@ -7,7 +7,7 @@ app.set('port', (process.env.PORT || 3000));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 
-MongoClient.connect('mongodb://localhost/store', (err, database) => {
+MongoClient.connect('mongodb://172.19.120.13:27017/app3DB', (err, database) => {
   if (err) return console.log(err);
   db = database;
   app.listen(app.get('port'), function() {
@@ -30,8 +30,8 @@ app.get('/trolleys', function(req, res){
         collectionsArray = collections;
       function getNumber(i,bay) {
         var x;
-        db.collection("ultimo", function(err, collection) {
-            collection.find({"bay": bay, "out": "x"}).toArray(function(err, result) {
+        db.collection("master", function(err, collection) {
+            collection.find({"bayid": bay, "outtime": "x"}).toArray(function(err, result) {
               if (err) {
                 throw err;
               } else {
@@ -53,7 +53,7 @@ app.get('/trolleys', function(req, res){
   
 app.get('/update', function(req, res){
 		db.listCollections().toArray(function(err, collections){
-				db.collection("ultimo", function(err, collection) {
+				db.collection("master", function(err, collection) {
 					collection.find({"outtime": "x"}).toArray(function(err, result) {
 					  if (err) {
 						throw err;
@@ -85,16 +85,17 @@ function generateResponseJSON(result)
 	for (i = 0;i < result.length;i++)
 	{
 		var record = result[i];
-		if (bay.hasOwnProperty(record.bay))
+		console.log(record);
+		if (bay.hasOwnProperty(record.bayid))
 		{
 			//bay already registered add one omre to count
 			console.log("already exists");
-			bay[record.bay].count++;
+			bay[record.bayid].count++;
 		}
 		else
 		{
 			console.log("make new");
-			bay[record.bay] = {
+			bay[record.bayid] = {
 						count:1,
 						capacity:5,
 						};	
