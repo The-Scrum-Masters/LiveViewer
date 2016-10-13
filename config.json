@@ -1,0 +1,4 @@
+{
+	"mongoip":"localhost",
+	"mongoport":"27017"
+}

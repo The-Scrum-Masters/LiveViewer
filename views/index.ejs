@@ -72,7 +72,7 @@
 </div>
 </body>
 <script>
-	//array of progres bars
+	//array of progress bars
 	progressBarsHolder = {}
 	
   function set_wheel( max, div_name) {
@@ -145,7 +145,8 @@
 		  step: function(state, circle) {
 		    circle.path.setAttribute('stroke', state.color);
 		    circle.path.setAttribute('stroke-width', state.width);
-		    circle.setText(name);
+		    var currentValue = Math.round(circle.value()*capacity);
+		    circle.setText("Bay:" + name + ", Trolleys: " + currentValue + "/" + capacity);
 		  }
 		});
 		bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
@@ -153,8 +154,27 @@
 		bar.text.style.position = 'relative';
 
 		bar.animate(value/capacity);
-		
+		//register the circle, so we can check if it exists in later requests
 		progressBarsHolder[name] = bar;
+  }
+  
+  function checkEmptyBays(JSONdata)
+  {
+		for (var key in progressBarsHolder) {
+				//console.log(key + " -> " + JSONdata[key]);
+				name = key + "";//convert to string
+				//console.log("name:");
+				//console.log(name);
+				//console.log("key");
+				//console.log(key);
+				if (!JSONdata.hasOwnProperty(name))
+				{
+					//because JSONdata doesn't have bay in it, we can assume that there 
+					//are no trolleys in that bay.
+					console.log("found empty Bay");
+					progressBarsHolder[key].animate(0);
+				}
+		}
   }
   
   
@@ -169,13 +189,17 @@
 	
 	function requestAndDisplay()
 	{
+		//Notes, this failes to update circles when their count falls to 0, as the
+		//bay record isn't sent, thus we must manually check if the record is
+		//missing and assume it has fallen to 0.
 		$.get("update", function(data, status){
-        //alert("Data: " + data + "\nStatus: " + status);
-        displayData(data);
-    });	
+		    //alert("Data: " + data + "\nStatus: " + status);
+		    displayData(data);
+		    checkEmptyBays(data);
+    	});	
 	}
 	
-	setInterval(requestAndDisplay, 1000);
+	setInterval(requestAndDisplay, 2000);
   
   
 </script>

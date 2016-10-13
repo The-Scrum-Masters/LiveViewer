@@ -1,5 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+
+var config = require('./config.json');
+
 var MongoClient = require('mongodb').MongoClient
 var app = express();
 
@@ -7,7 +10,8 @@ app.set('port', (process.env.PORT || 3000));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 
-MongoClient.connect('mongodb://172.19.120.13:27017/app3DB', (err, database) => {
+var mongoConnection = 'mongodb://' + config.mongoip + ":" + config.mongoport + '/app3DB'
+MongoClient.connect(mongoConnection, (err, database) => {
   if (err) return console.log(err);
   db = database;
   app.listen(app.get('port'), function() {
@@ -52,17 +56,17 @@ app.get('/trolleys', function(req, res){
   });
   
 app.get('/update', function(req, res){
-		db.listCollections().toArray(function(err, collections){
-				db.collection("master", function(err, collection) {
-					collection.find({"outtime": "x"}).toArray(function(err, result) {
-					  if (err) {
-						throw err;
-					  } else {
-						x=result.length;
-					  }
-					  res.json(generateResponseJSON(result));
-					});
-			  	});
+	db.listCollections().toArray(function(err, collections){
+		db.collection("master", function(err, collection) {
+			collection.find({"outtime": "x"}).toArray(function(err, result) {
+				if (err) {
+					res.status(500).send({ error: 'something blew up' });
+					return;
+				}
+
+				res.json(generateResponseJSON(result));
+			});
+		});
     });
 });
 
@@ -70,15 +74,21 @@ app.get('/update', function(req, res){
 
 //returns a json object to respond with
 //result is JSON object.
+
+//This generates a JSON object that holds a bay name as a key
+//and an object containing the bay's capcity and count as a value.
+//The JSON object can also have multiple keys, each for a different bay.
 function generateResponseJSON(result)
 {
 	//bayCount = {
-	//	bay:{
-	//		name: "";
+	//	bayname:{
+	//		capacity: 0;
 	//		count:0;
 	//	},
 	//};
 	
+	
+	//This use
 	bay = {};
 	console.log("result: ");
 	console.log(result);
@@ -97,7 +107,7 @@ function generateResponseJSON(result)
 			console.log("make new");
 			bay[record.bayid] = {
 						count:1,
-						capacity:5,
+						capacity:10,
 						};	
 		}
 	}
