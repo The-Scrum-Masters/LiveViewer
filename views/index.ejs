@@ -17,6 +17,7 @@
     height: 200px;
     position: relative;
   }
+  
   .bay {
     color: blue;
     font-size: 90px;
@@ -50,30 +51,44 @@
     </ul>
   </nav>
   <div class="center_table">
-  <table class="container panel panel-default" style="width:90% position: fixed;">
-   <tr>
-     <th><div id="bay1"><%- bay[0] %></div>
-    </th>
-     <th><div id="bay2"><%- bay[1] %></div></th>
-     <th><div id="bay3"><%- bay[2] %></div></th>
-   </tr>
-   <th><div id="t_bay1"><%- bay[0] %> trolleys</div><br>
-    <div id="n_bay1"></div>
-   </th>
-   <th><div id="t_bay2"><%- bay[1] %> trolleys</div><br>
-    <div id="n_bay2"></div>
-   </th>
-   <th><div id="t_bay3"><%- bay[2] %> trolleys</div><br>
-    <div id="n_bay3"></div>
-   </th>
-  </table>
-  <div id="newContainer"/>
-  <div id="numbers"/>
-</div>
+		<table class="container panel panel-default" style="width:90% position: fixed;">
+		 <tr>
+		   <th><div id="bay1"><%- bay[0] %></div>
+		  </th>
+		   <th><div id="bay2"><%- bay[1] %></div></th>
+		   <th><div id="bay3"><%- bay[2] %></div></th>
+		 </tr>
+		 <th><div id="t_bay1"><%- bay[0] %> trolleys</div><br>
+		  <div id="n_bay1"></div>
+		 </th>
+		 <th><div id="t_bay2"><%- bay[1] %> trolleys</div><br>
+		  <div id="n_bay2"></div>
+		 </th>
+		 <th><div id="t_bay3"><%- bay[2] %> trolleys</div><br>
+		  <div id="n_bay3"></div>
+		 </th>
+		 
+		</table>
+		
+		<div id="numbers"/>
+		<!--Sorry for inline onclick, just wanted it to update from one page, need to change for different IPs-->
+	  <button type="button" onclick="$.ajax({url:'http://localhost:8081/mongoadd',dataType: 'jsonp',})" class="btn btn-primary btn-lg">Add</button>
+	  <button type="button" onclick="$.ajax({url:'http://localhost:8081/mongodelete',dataType: 'jsonp',})" class="btn btn-primary btn-lg btn-danger">Delete</button>
+	  <button type="button" onclick="requestAndDisplay()" class="btn btn-primary btn-lg">Update</button>
+	  <button type="button" onclick="changeInterval()" class="btn btn-primary btn-lg">change refresh rate</button>
+	</div>
+	<div id="newContainer"/>
 </body>
 <script>
-	//array of progress bars
-	progressBarsHolder = {}
+
+	//Notes:
+	//we can't keep the refresh interval too short, because it blocks javascript
+	//and it leads to the animation of the circles stuttering
+	
+	//onject of progress bars, where the bay name is the key.
+	progressBarsHolder = {};
+	IntervalID = null;//id for interval;
+	
 	
   function set_wheel( max, div_name) {
 		get_val = parseInt(document.getElementById(div_name).innerHTML);
@@ -170,7 +185,8 @@
 				if (!JSONdata.hasOwnProperty(name))
 				{
 					//because JSONdata doesn't have bay in it, we can assume that there 
-					//are no trolleys in that bay.
+					//are no trolleys in that bay, but as Luke always says
+					//"assumptions are the mother of all ....."
 					console.log("found empty Bay");
 					progressBarsHolder[key].animate(0);
 				}
@@ -182,7 +198,7 @@
 	{
 		console.log(JSONdata);
 		for (var key in JSONdata) {
-				console.log(key + " -> " + JSONdata[key]);
+				//console.log(key + " -> " + JSONdata[key]);
 				newWheel(JSONdata[key].count,JSONdata[key].capacity,key+"");
 		}
 	}
@@ -196,10 +212,20 @@
 		    //alert("Data: " + data + "\nStatus: " + status);
 		    displayData(data);
 		    checkEmptyBays(data);
-    	});	
+    });	
 	}
 	
-	setInterval(requestAndDisplay, 2000);
+	function changeInterval()
+	{
+		response = prompt("What's the new interval in milliseconds?", 3000);
+		if (response !== null)
+		{
+			clearInterval(IntervalID);
+			IntervalID = setInterval(requestAndDisplay, parseInt(response));
+		}
+	}
+	
+	IntervalID = setInterval(requestAndDisplay, 5000);
   
   
 </script>
